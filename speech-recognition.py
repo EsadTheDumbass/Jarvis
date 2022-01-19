@@ -1,36 +1,45 @@
-import speech_recognition
+from urllib.request import urlopen
+from requests import Request, Session
+import requests
+from speech_recognition import UnknownValueError
 import speech_recognition as sr
 from gtts import gTTS
-# import Os module to start the audio file
+import json
+import urllib
+from urllib import *
 import os
+import pprint
 from time import time,ctime
 t = time()
+import pyttsx3
+engine = pyttsx3.init()
+newsAPI = 'TOKEN'
 language = 'tr'
-
+commands = ['news']
 r = sr.Recognizer()
+session = Session()
+
 with sr.Microphone() as source:
     print("Speak Anything :")
-    while True:
-        audio = r.listen(source)
-        text = r.recognize_google(audio)
-        print('You just said {}'.format(text))
-        try:
-            if text == 'Jarvis':
-                mytext = f'Hizmetinizdeyim.'
-                myobj = gTTS(text=mytext, lang=language, slow=False)
-                myobj.save("output.mp3")
-                os.system("start output.mp3")
-            else:
-                mytext = f'Efendim? Sizi duyamadim.'
-                myobj = gTTS(text=mytext, lang=language, slow=False)
-                myobj.save("output.mp3")
-                os.system("start output.mp3")
-        except speech_recognition.UnknownValueError:
-            mytext = f'Efendim? Sizi duyamadim.'
-            myobj = gTTS(text=mytext, lang=language, slow=False)
-            myobj.save("output.mp3")
-            os.system("start output.mp3")
-
+    engine.setProperty('voice', 64)
+    audio = r.listen(source)
+    text = r.recognize_google(audio, language='tr-TR')
+    print('You just said {}'.format(text))
+    try:
+        news_url = f'https://newsapi.org/v2/top-headlines?sources=bbc-news&apiKey={newsAPI}'
+        if ('Jarvis' or 'jarvis' in text) and ('Haberler' or 'haberler' in text):
+            response = session.get(news_url)
+            data = json.loads(response.text)
+            for x in range(1,9):
+                engine.say(data['articles'][x]['title'])
+                engine.runAndWait()
+            #if command not in commands:
+        else:
+            engine.say("I could not understand you sir.", language)
+            engine.runAndWait()
+    except UnknownValueError:
+        engine.say("I could not understand sorry.")
+        engine.runAndWait()
 
 
 # Language we want to use
